@@ -8,7 +8,6 @@
 
 from recognize_posture import PostureRecognitionAgent
 
-
 class StandingUpAgent(PostureRecognitionAgent):
     def think(self, perception):
         self.standing_up()

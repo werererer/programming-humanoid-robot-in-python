@@ -35,9 +35,9 @@ class PIDController(object):
         self.prev_I = np.zeros(size)
         # ADJUST PARAMETERS BELOW
         delay = 0
-        self.Kp = 0
-        self.Ki = 0
-        self.Kd = 0
+        self.Kp = 20
+        self.Ki = 1
+        self.Kd = -0.1
         self.y = deque(np.zeros(size), maxlen=delay + 1)
 
     def set_delay(self, delay):
@@ -47,21 +47,26 @@ class PIDController(object):
         self.y = deque(self.y, delay + 1)
 
     def control(self, target, sensor):
-        '''apply PID control
+        '''apply PID control with delay
         @param target: reference values
         @param sensor: current values from sensor
         @return control signal
         '''
-        # YOUR CODE HERE
-        # e2 holds the error from the previous step
-        target_prediction = self.y[0] + sensor * self.dt
-        self.e2 = self.e1
-        self.e1 = target_prediction - sensor
+        # Speichern Sie den aktuellen Sensorwert in self.y
+        self.y.appendleft(sensor)
+
+        # Verwenden Sie den ältesten Wert in self.y für die PID-Berechnung
+        delayed_sensor = self.y[-1]
+
+        # PID-Berechnung mit verzögertem Sensorwert
+        self.e1 = target - delayed_sensor
         P = self.Kp * self.e1
         I = self.prev_I + self.Ki * self.e1 * self.dt
         D = self.Kd * (self.e1 - self.e2) / self.dt
-
         self.u = P + I + D
+
+        self.prev_I = I
+        self.e2 = self.e1
         return self.u
 
 

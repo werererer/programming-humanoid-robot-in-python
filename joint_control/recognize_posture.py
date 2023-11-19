@@ -12,7 +12,9 @@
 
 from angle_interpolation import AngleInterpolationAgent
 from keyframes import hello
+import pickle
 
+PATH = 'robot_pose.pkl'
 
 class PostureRecognitionAgent(AngleInterpolationAgent):
     def __init__(self, simspark_ip='localhost',
@@ -30,11 +32,21 @@ class PostureRecognitionAgent(AngleInterpolationAgent):
 
     def recognize_posture(self, perception):
         posture = 'unknown'
-        # YOUR CODE HERE
+        # YOUR CODE HERE^
+        print("Perception: ", perception.joint.keys)
+        with open(PATH, 'rb') as file:
+            self.posture_classifier = pickle.load(file)
+            
+        prediction = self.posture_classifier.predict(perception)
+        print("Prediction: ", prediction)
 
         return posture
 
+print("hi")
 if __name__ == '__main__':
+    print("works1")
     agent = PostureRecognitionAgent()
+    print("works2")
     agent.keyframes = hello()  # CHANGE DIFFERENT KEYFRAMES
+    print("works3")
     agent.run()
