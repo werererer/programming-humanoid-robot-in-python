@@ -47,6 +47,11 @@ class PostureRecognitionAgent(AngleInterpolationAgent):
 
         print("test: ", percieved_values)
         return percieved_values
+    
+    def num_to_posture(self, num):
+        postures = ['Back', 'Belly', 'Crouch', 'Frog', 'HeadBack', 'Knee', 'Left', 'Right', 'Sit', 'Stand', 'StandInit']
+        return postures[num]
+
 
     def recognize_posture(self, perception):
         posture = 'unknown'
@@ -58,8 +63,8 @@ class PostureRecognitionAgent(AngleInterpolationAgent):
             self.posture_classifier = pickle.load(file)
         
         percieved_values = [self.perception_get_prediction_input(perception)]
-        prediction = self.posture_classifier.predict(percieved_values)
-        print("Prediction: ", prediction)
+        prediction = self.posture_classifier.predict(percieved_values)[0]
+        print("Prediction: ", self.num_to_posture(prediction))
 
         return posture
 
