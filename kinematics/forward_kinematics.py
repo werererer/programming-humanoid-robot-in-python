@@ -36,9 +36,13 @@ class ForwardKinematicsAgent(PostureRecognitionAgent):
         self.transforms = {n: identity(4) for n in self.joint_names}
 
         # chains defines the name of chain and joints of the chain
-        self.chains = {'Head': ['HeadYaw', 'HeadPitch']
+        self.chains = {'Head': ['HeadYaw', 'HeadPitch'],
                        # YOUR CODE HERE
-                       }
+                       'LArm': ['LShoulderPitch', 'LShoulderRoll', 'LElbowYaw', 'LElbowRoll', 'LWristYaw'],
+                       'RArm': ['RShoulderPitch', 'RShoulderRoll', 'RElbowYaw', 'RElbowRoll', 'RWristYaw'],
+                       'LLeg': ['LHipYawPitch', 'LHipRoll', 'LHipPitch', 'LKneePitch', 'LAnklePitch', 'LAnkleRoll'],
+                       'RLeg': ['RHipYawPitch', 'RHipRoll', 'RHipPitch', 'RKneePitch', 'RAnklePitch', 'RAnkleRoll']
+                        }
 
     def think(self, perception):
         self.forward_kinematics(perception.joint)
@@ -52,6 +56,8 @@ class ForwardKinematicsAgent(PostureRecognitionAgent):
         :return: transformation
         :rtype: 4x4 matrix
         '''
+        print("joint_name: ", joint_name)
+        print("joint_angle: ", joint_angle)
         T = identity(4)
         # YOUR CODE HERE
 
@@ -72,5 +78,7 @@ class ForwardKinematicsAgent(PostureRecognitionAgent):
                 self.transforms[joint] = T
 
 if __name__ == '__main__':
+    print("start1")
     agent = ForwardKinematicsAgent()
+    print("start2")
     agent.run()

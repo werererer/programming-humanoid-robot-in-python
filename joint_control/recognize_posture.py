@@ -30,23 +30,40 @@ class PostureRecognitionAgent(AngleInterpolationAgent):
         self.posture = self.recognize_posture(perception)
         return super(PostureRecognitionAgent, self).think(perception)
 
+    def perception_get_prediction_input(self, perception):
+        percieved_values = []
+        participating_joints = ['LHipYawPitch', 'LHipRoll', 'LHipPitch', 'LKneePitch', 'RHipYawPitch', 'RHipRoll', 'RHipPitch', 'RKneePitch']
+        # XAngle
+        # YAngle
+        joint = perception.joint
+
+        for key in participating_joints:
+            val = joint[key]
+            print("key: ", key)
+            percieved_values.append(val)
+        
+        percieved_values.append(perception.gyr[0])
+        percieved_values.append(perception.gyr[1])
+
+        print("test: ", percieved_values)
+        return percieved_values
+
     def recognize_posture(self, perception):
         posture = 'unknown'
         # YOUR CODE HERE^
-        print("Perception: ", perception.joint.keys)
+        print("keys: ", perception.gyr)
+        
+
         with open(PATH, 'rb') as file:
             self.posture_classifier = pickle.load(file)
-            
-        prediction = self.posture_classifier.predict(perception)
+        
+        percieved_values = [self.perception_get_prediction_input(perception)]
+        prediction = self.posture_classifier.predict(percieved_values)
         print("Prediction: ", prediction)
 
         return posture
 
-print("hi")
 if __name__ == '__main__':
-    print("works1")
     agent = PostureRecognitionAgent()
-    print("works2")
     agent.keyframes = hello()  # CHANGE DIFFERENT KEYFRAMES
-    print("works3")
     agent.run()
