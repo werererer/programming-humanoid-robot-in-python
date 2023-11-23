@@ -21,11 +21,14 @@
 
 
 from pid import PIDAgent
-from keyframes import hello
+from keyframes import wipe_forehead
 from scipy.interpolate import CubicSpline
 
 
 class AngleInterpolationAgent(PIDAgent):
+    
+    time_offset = float('nan')
+
     def __init__(self, simspark_ip='localhost',
                  simspark_port=3100,
                  teamname='DAInamite',
@@ -43,10 +46,15 @@ class AngleInterpolationAgent(PIDAgent):
 
     def angle_interpolation(self, keyframes, perception):
         # YOUR CODE HERE
-        print("works1")
         names, times, keys = keyframes
         target_joints = {}
-        print("works2")
+        
+        import math
+        if math.isnan(self.time_offset):
+            print("non offset")
+            self.time_offset = perception.time
+        
+        time = max(perception.time - self.time_offset, 0)
 
         # Gehe jedes Gelenk durch
         for joint_index, joint_name in enumerate(names):
@@ -55,20 +63,18 @@ class AngleInterpolationAgent(PIDAgent):
             joint_keys = [key[0] for key in keys[joint_index]]
 
             # Erstelle einen kubischen Spline für das aktuelle Gelenk
-            spline = CubicSpline(joint_times, joint_keys)
+            spline = CubicSpline(joint_times, joint_keys, bc_type='natural')
+            # they should end with y' = 0 and y'' = 0
 
             # Berechne den aktuellen Winkel für dieses Gelenk
-            current_time = min(max(perception.time, joint_times[0]), joint_times[-1])
+            print("perception.time: ", time, " current_time: ", min(max(time, joint_times[0]), joint_times[-1]))
+            current_time = min(max(time, joint_times[0]), joint_times[-1])
             target_angle = spline(current_time)
             target_joints[joint_name] = target_angle
 
-        print("works4")
         return target_joints
 
 if __name__ == '__main__':
-    print("works01") 
     agent = AngleInterpolationAgent()
-    print("works02")
-    agent.keyframes = hello()  # CHANGE DIFFERENT KEYFRAMES
-    print("works03")
+    agent.keyframes = wipe_forehead()  # CHANGE DIFFERENT KEYFRAMES
     agent.run()

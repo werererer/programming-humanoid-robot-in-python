@@ -39,13 +39,11 @@ class PostureRecognitionAgent(AngleInterpolationAgent):
 
         for key in participating_joints:
             val = joint[key]
-            print("key: ", key)
             percieved_values.append(val)
         
         percieved_values.append(perception.gyr[0])
         percieved_values.append(perception.gyr[1])
 
-        print("test: ", percieved_values)
         return percieved_values
     
     def num_to_posture(self, num):
@@ -56,15 +54,13 @@ class PostureRecognitionAgent(AngleInterpolationAgent):
     def recognize_posture(self, perception):
         posture = 'unknown'
         # YOUR CODE HERE^
-        print("keys: ", perception.gyr)
         
-
         with open(PATH, 'rb') as file:
             self.posture_classifier = pickle.load(file)
         
         percieved_values = [self.perception_get_prediction_input(perception)]
         prediction = self.posture_classifier.predict(percieved_values)[0]
-        print("Prediction: ", self.num_to_posture(prediction))
+        posture = self.num_to_posture(prediction)
 
         return posture
 
