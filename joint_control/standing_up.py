@@ -18,10 +18,19 @@ class StandingUpAgent(PostureRecognitionAgent):
         return super(StandingUpAgent, self).think(perception)
 
     def standing_up(self, perception):
-        self.posture = self.recognize_posture(perception)
         # YOUR CODE HERE
+        if perception.time - self.time_offset > 0.5:
+            return
+        if (self.posture == "Left"):
+            self.keyframes = leftBackToStand()
+        elif (self.posture == "Right"):
+            self.keyframes = rightBackToStand()
+        elif (self.posture == "Belly"):
+            self.keyframes = leftBellyToStand()
+        elif (self.posture == "Back"):
+            self.keyframes = rightBellyToStand()
 
-        print("posture: ", self.posture)
+        
 
 class TestStandingUpAgent(StandingUpAgent):
     '''this agent turns off all motor to falls down in fixed cycles

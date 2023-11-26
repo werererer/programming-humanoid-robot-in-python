@@ -17,6 +17,7 @@
 '''
 
 # add PYTHONPATH
+import math
 import os
 import sys
 sys.path.append(os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', 'joint_control'))
@@ -24,7 +25,6 @@ sys.path.append(os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', '
 from numpy.matlib import matrix, identity
 
 from recognize_posture import PostureRecognitionAgent
-
 
 class ForwardKinematicsAgent(PostureRecognitionAgent):
     def __init__(self, simspark_ip='localhost',
@@ -38,8 +38,8 @@ class ForwardKinematicsAgent(PostureRecognitionAgent):
         # chains defines the name of chain and joints of the chain
         self.chains = {'Head': ['HeadYaw', 'HeadPitch'],
                        # YOUR CODE HERE
-                       'LArm': ['LShoulderPitch', 'LShoulderRoll', 'LElbowYaw', 'LElbowRoll', 'LWristYaw'],
-                       'RArm': ['RShoulderPitch', 'RShoulderRoll', 'RElbowYaw', 'RElbowRoll', 'RWristYaw'],
+                       'LArm': ['LShoulderPitch', 'LShoulderRoll', 'LElbowYaw', 'LElbowRoll'],
+                       'RArm': ['RShoulderPitch', 'RShoulderRoll', 'RElbowYaw', 'RElbowRoll'],
                        'LLeg': ['LHipYawPitch', 'LHipRoll', 'LHipPitch', 'LKneePitch', 'LAnklePitch', 'LAnkleRoll'],
                        'RLeg': ['RHipYawPitch', 'RHipRoll', 'RHipPitch', 'RKneePitch', 'RAnklePitch', 'RAnkleRoll']
                         }
@@ -47,6 +47,22 @@ class ForwardKinematicsAgent(PostureRecognitionAgent):
     def think(self, perception):
         self.forward_kinematics(perception.joint)
         return super(ForwardKinematicsAgent, self).think(perception)
+    
+    def is_roll_joint(self, joint_name):
+        joint_names = ['LShoulderRoll', 'RShoulderRoll', 'LHipRoll', 'RHipRoll', 'LAnkleRoll', 'RAnkleRoll']
+        if joint_name in joint_names:
+            return True
+        return False
+    def is_pitch_joint(self, joint_name):
+        joint_names = ['LShoulderPitch', 'RShoulderPitch', 'LHipPitch', 'RHipPitch', 'LAnklePitch', 'RAnklePitch']
+        if joint_name in joint_names:
+            return True
+        return False
+    def is_yaw_joint(self, joint_name):
+        joint_names = ['HeadYaw', 'LHipYawPitch', 'RHipYawPitch']
+        if joint_name in joint_names:
+            return True
+        return False
 
     def local_trans(self, joint_name, joint_angle):
         '''calculate local transformation of one joint
@@ -56,11 +72,29 @@ class ForwardKinematicsAgent(PostureRecognitionAgent):
         :return: transformation
         :rtype: 4x4 matrix
         '''
-        print("joint_name: ", joint_name)
-        print("joint_angle: ", joint_angle)
+        # print("joint_name: ", joint_name)
+        # print("joint_angle: ", joint_angle)
         T = identity(4)
+        s = math.sin(joint_angle)
+        c = math.cos(joint_angle)
+        x = 1.0
+        joint_angle=0.4
         # YOUR CODE HERE
-
+        if self.is_roll_joint(joint_name):
+            T = [[1, 0, 0, x],
+                 [0, c, -s, 0],
+                 [0, s, c, 0],
+                 [0, 0, 0, 1]]
+        elif self.is_pitch_joint(joint_name):
+            T = [[c, 0, -s, x],
+                 [0, 1, 0, 0],
+                 [s, 0, c, 0],
+                 [0, 0, 0, 1]]
+        elif self.is_yaw_joint(joint_name):
+            T = [[c, -s, 0, x],
+                 [s, c, 0, 0],
+                 [0, 0, 1, 0],
+                 [0, 0, 0, 1]]
         return T
 
     def forward_kinematics(self, joints):
@@ -74,7 +108,7 @@ class ForwardKinematicsAgent(PostureRecognitionAgent):
                 angle = joints[joint]
                 Tl = self.local_trans(joint, angle)
                 # YOUR CODE HERE
-
+                T = T * Tl
                 self.transforms[joint] = T
 
 if __name__ == '__main__':

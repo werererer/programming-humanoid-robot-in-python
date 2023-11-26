@@ -21,9 +21,8 @@
 
 
 from pid import PIDAgent
-from keyframes import wipe_forehead
+from keyframes import hello
 from scipy.interpolate import CubicSpline
-
 
 class AngleInterpolationAgent(PIDAgent):
     
@@ -47,11 +46,13 @@ class AngleInterpolationAgent(PIDAgent):
     def angle_interpolation(self, keyframes, perception):
         # YOUR CODE HERE
         names, times, keys = keyframes
+        # print("names: ", names)
+        # print("times: ", times)
+        # print("keys: ", keys)
         target_joints = {}
         
         import math
         if math.isnan(self.time_offset):
-            print("non offset")
             self.time_offset = perception.time
         
         time = max(perception.time - self.time_offset, 0)
@@ -67,8 +68,10 @@ class AngleInterpolationAgent(PIDAgent):
             # they should end with y' = 0 and y'' = 0
 
             # Berechne den aktuellen Winkel für dieses Gelenk
-            print("perception.time: ", time, " current_time: ", min(max(time, joint_times[0]), joint_times[-1]))
+            # print("perception.time: ", time, " current_time: ", min(max(time, joint_times[0]), joint_times[-1]))
             current_time = min(max(time, joint_times[0]), joint_times[-1])
+            if time > 12:
+                self.time_offset = perception.time
             target_angle = spline(current_time)
             target_joints[joint_name] = target_angle
 
@@ -76,5 +79,5 @@ class AngleInterpolationAgent(PIDAgent):
 
 if __name__ == '__main__':
     agent = AngleInterpolationAgent()
-    agent.keyframes = wipe_forehead()  # CHANGE DIFFERENT KEYFRAMES
+    agent.keyframes = hello()  # CHANGE DIFFERENT KEYFRAMES
     agent.run()
