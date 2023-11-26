@@ -14,7 +14,7 @@ from angle_interpolation import AngleInterpolationAgent
 from keyframes import hello
 import pickle
 
-PATH = 'robot_pose.pkl'
+PATH = '../joint_control/robot_pose.pkl'
 
 class PostureRecognitionAgent(AngleInterpolationAgent):
     def __init__(self, simspark_ip='localhost',

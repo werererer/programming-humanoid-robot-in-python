@@ -1,66 +1,79 @@
-'''In this file you need to implement remote procedure call (RPC) client
-
-* The agent_server.py has to be implemented first (at least one function is implemented and exported)
-* Please implement functions in ClientAgent first, which should request remote call directly
-* The PostHandler can be implement in the last step, it provides non-blocking functions, e.g. agent.post.execute_keyframes
- * Hints: [threading](https://docs.python.org/2/library/threading.html) may be needed for monitoring if the task is done
-'''
-
 import weakref
+import threading
+from jsonrpclib import Server
+import os
+import sys
 
-class PostHandler(object):
-    '''the post hander wraps function to be excuted in paralle
-    '''
-    def __init__(self, obj):
-        self.proxy = weakref.proxy(obj)
+sys.path.append(os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', 'joint_control'))
 
-    def execute_keyframes(self, keyframes):
-        '''non-blocking call of ClientAgent.execute_keyframes'''
-        # YOUR CODE HERE
-
-    def set_transform(self, effector_name, transform):
-        '''non-blocking call of ClientAgent.set_transform'''
-        # YOUR CODE HERE
-
+from keyframes import hello
 
 class ClientAgent(object):
-    '''ClientAgent request RPC service from remote server
-    '''
-    # YOUR CODE HERE
-    def __init__(self):
+    '''ClientAgent requests RPC services from a remote server'''
+
+    def __init__(self, server_url):
+        # Initialize the JSON-RPC server connection
+        self.rpc_server = Server(server_url)
+        # Create a PostHandler instance for non-blocking calls
         self.post = PostHandler(self)
     
+    # Method to get the angle of a joint
     def get_angle(self, joint_name):
-        '''get sensor value of given joint'''
-        # YOUR CODE HERE
+        # Remote procedure call to get joint angle
+        return self.rpc_server.get_angle(joint_name)
     
+    # Method to set the angle of a joint
     def set_angle(self, joint_name, angle):
-        '''set target angle of joint for PID controller
-        '''
-        # YOUR CODE HERE
+        # Remote procedure call to set joint angle
+        self.rpc_server.set_angle(joint_name, angle)
 
+    # Method to get the current posture of the robot
     def get_posture(self):
-        '''return current posture of robot'''
-        # YOUR CODE HERE
+        # Remote procedure call to get the robot's posture
+        return self.rpc_server.get_posture()
 
+    # Method to execute keyframes (blocking call)
     def execute_keyframes(self, keyframes):
-        '''excute keyframes, note this function is blocking call,
-        e.g. return until keyframes are executed
-        '''
-        # YOUR CODE HERE
+        # Remote procedure call to execute keyframes
+        self.rpc_server.execute_keyframes(keyframes)
 
+    # Method to get a transform with a given name
     def get_transform(self, name):
-        '''get transform with given name
-        '''
-        # YOUR CODE HERE
+        # Remote procedure call to get a transform
+        return self.rpc_server.get_transform(name)
 
+    # Method to set a transform for an effector
     def set_transform(self, effector_name, transform):
-        '''solve the inverse kinematics and control joints use the results
-        '''
-        # YOUR CODE HERE
+        # Remote procedure call to set a transform
+        self.rpc_server.set_transform(effector_name, transform)
+
+class PostHandler(object):
+    '''PostHandler provides non-blocking function calls'''
+
+    def __init__(self, client_agent):
+        # Store a weak reference to the client agent to avoid circular references
+        self.proxy = weakref.proxy(client_agent)
+
+    # Non-blocking method to execute keyframes
+    def execute_keyframes(self, keyframes):
+        # Start a new thread for the blocking execute_keyframes call
+        threading.Thread(target=self.proxy.execute_keyframes, args=(keyframes,)).start()
+
+    # Non-blocking method to set a transform
+    def set_transform(self, effector_name, transform):
+        # Start a new thread for the blocking set_transform call
+        threading.Thread(target=self.proxy.set_transform, args=(effector_name, transform)).start()
 
 if __name__ == '__main__':
-    agent = ClientAgent()
-    # TEST CODE HERE
+    print("works1")
+    server_url = 'http://localhost:8000'  # Replace with your server URL
+    print("works2")
+    agent = ClientAgent(server_url)
+    print("works3")
 
-
+    # Example usage:
+    keyframes = hello()
+    print("works4", keyframes)
+    agent.post.execute_keyframes(keyframes)
+    print("works5")
+    # agent.post.set_transform(effector_name, transform)
