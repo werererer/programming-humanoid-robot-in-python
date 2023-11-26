@@ -107,7 +107,8 @@ class InverseKinematicsAgent(ForwardKinematicsAgent):
         theta_z = self.extract_theta_z(transform)
         return x, y, z, theta_x, theta_y, theta_z
 
-    def inverse_kinematics(self, effector_name, transform):
+    max_step = 0.1
+    def inverse_kinematics(self, effector_name, transform, delta_target):
         '''solve the inverse kinematics
 
         :param str effector_name: name of end effector, e.g. LLeg, RLeg
@@ -122,26 +123,23 @@ class InverseKinematicsAgent(ForwardKinematicsAgent):
         if (effector_name not in self.implemented_effector_names):
             raise NotImplementedError("Effector %s is not implemented" % effector_name)
         
+        # http://doc.aldebaran.com/2-1/family/nao_h21/joints_h21.html
+       # http://doc.aldebaran.com/2-1/family/nao_h21/links_h21.html
         # based on http://doc.aldebaran.com/2-1/family/robots/bodyparts.html#effector-chain LLeg and RLeg
-        jacobian = np.concatenate((self.jacobian_roll_column(x, y, z),
-                    self.jacobian_pitch_column(x, y, z),
-                    self.jacobian_pitch_column(x, y, z),
-                    self.jacobian_pitch_column(x, y, z),
-                    self.jacobian_roll_column(x, y, z)), axis=1)
+        jacobian = np.concatenate((self.jacobian_yaw_pitch_column(x, y, z),
+            self.jacobian_roll_column(x, y, z),
+            self.jacobian_pitch_column(x, y, z),
+            self.jacobian_pitch_column(x, y, z),
+            self.jacobian_pitch_column(x, y, z),
+            self.jacobian_roll_column(x, y, z)), axis=1)
         print("jacobin: ", jacobian)
         jacobian_inv = np.linalg.pinv(jacobian)
         print("jacobina_inv: ", jacobian_inv)
         print("jacobian_dim: ", jacobian.shape, " vs. ", jacobian_inv.shape)
 
-        input_vector = np.matrix([[x],
-                                 [y],
-                                 [z],
-                                 [theta_x],
-                                 [theta_y],
-                                 [theta_z]])
-        print("input_vector: ", input_vector)
+        print("input_vector: ", delta_target)
         
-        joint_angles = jacobian_inv * input_vector
+        joint_angles = jacobian_inv * delta_target
         print("joint_angles: ", joint_angles)
         return joint_angles
     
@@ -149,7 +147,7 @@ class InverseKinematicsAgent(ForwardKinematicsAgent):
         chain_joints = self.chains[effector_name]
         
         # remove first joint
-        chain_joints = chain_joints[1:]
+        # chain_joints = chain_joints[1:]
         # create dictionary with joint names as keys and angles as values
         joint_angles = dict()
         for i in range(len(chain_joints)):
@@ -187,10 +185,17 @@ class InverseKinematicsAgent(ForwardKinematicsAgent):
         '''
         # YOUR CODE HERE
         effector_name = "LLeg"
-        transform = self.encode_information_into_transform(0, 0, 2.0, 0, 0, 0)
-        anglesDiff = self.inverse_kinematics(effector_name, transform)
+        # encode current position into transform
+        transform = self.encode_information_into_transform(0.0, 0.0, -1.0, 0, 0.0, 0)
+        delta_target = np.matrix([[3],
+                        [0],
+                        [0],
+                        [0],
+                        [0],
+                        [0]])
+        anglesDiff = self.inverse_kinematics(effector_name, transform, delta_target)
         percentages = self.angle_to_percentages(anglesDiff)
-        self.keyframes = self.my_keyframes(effector_name, anglesDiff)
+        self.keyframes = self.my_keyframes(effector_name, percentages)
         print("percentages: ", percentages)
         
         # print("anglesDiff: ", anglesDiff)

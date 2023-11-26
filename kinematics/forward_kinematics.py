@@ -86,9 +86,9 @@ class ForwardKinematicsAgent(PostureRecognitionAgent):
                  [0, s, c, 0],
                  [0, 0, 0, 1]]
         elif self.is_pitch_joint(joint_name):
-            T = [[c, 0, -s, x],
+            T = [[c, 0, s, x],
                  [0, 1, 0, 0],
-                 [s, 0, c, 0],
+                 [-s, 0, c, 0],
                  [0, 0, 0, 1]]
         elif self.is_yaw_joint(joint_name):
             T = [[c, -s, 0, x],
